@@ -1,128 +1,104 @@
-from msilib.schema import IniLocator
-import matplotlib
+from statistics import mode
+import numpy as np
 import pandas as pd
+import matplotlib as plt
+import seaborn as sns
 
 data = pd.read_excel('dataset.xlsx')
-x = data[data.columns[2:786]]
+X = data[data.columns[2:786]]
 y = data[data.columns[1]]
-#print(x)
-#print(y)
 
-from sklearn.neighbors import KNeighborsClassifier
-import numpy as np
+X = np.array(X)
+y = np.array(y)
 
-knn = KNeighborsClassifier(n_neighbors=1) # knn dimana k=1
-knn.fit(x,y)
+#mengubah menjadi array 1 dimensi
+y = y.flatten()
 
+#Melakukan pembagian data latih dan data uji 80%/20%
 from sklearn.model_selection import train_test_split
-from sklearn import metrics
-x_train, x_test, y_train, y_test = train_test_split(x,y,random_state=5)
-knn.fit(x_train, y_train)
-y_pred = knn.predict(x_test)
-print(metrics.accuracy_score(y_test, y_pred)) #score prediksi
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=3)
+print(len(X_train))
+print(len(X_test))
+print(len(y_train))
+print(len(y_test))
 
-#nilai k = 5 karena '5' merupakan 20% dari jumlah sampel yang ada
-from sklearn.model_selection import KFold
-kf = KFold(n_splits=5, shuffle=False)
+#Training KNN Classification Model
+from sklearn.neighbors import KNeighborsClassifier
+#Nilai K pada KNN
+K = 3
+model = KNeighborsClassifier(n_neighbors=K)
+model.fit(X_train, y_train)
 
-print('{} {:^61} {}'.format('Iteration', 'Training set observation', 'Testing set observations'))
-for iteration, data in enumerate(kf.split(x)):
-    print('{!s:^9} {} {!s:^25}'.format(iteration, data[0], data[1]))
+#Menentukan Prediksi dari X_test
+y_pred = model.predict(X_test)
+
+# Menentukan probabilitas hasil prediksi
+model.predict_proba(X_test)
+
+#Menampilkan hasil akurasi
+from sklearn.metrics import accuracy_score
+accuracy= accuracy_score(y_test, y_pred)*100
+
+print('Accuracy of our model is equal ' + str(round(accuracy, 2)) + ' %.')
 
 from sklearn.model_selection import cross_val_score
 
-knn = KNeighborsClassifier(n_neighbors=5)
+#membuat list of K for KNN
+k_list = list(range(1,50,2))
 
-scores = cross_val_score(knn, x, y, cv=5, scoring='accuracy')
-print(scores)
-print(scores.mean())
+cv_scores = []
 
-# mencari k terbaik untuk KNN
-# range k yang ingin dicari
-k_range = range(2,6)
-# membuat list kosong untuk scores
-k_scores = []
+# melakukan 5-fold cross validation dengan k = 1 dalam knn
+for k in k_list:
+    knn = KNeighborsClassifier(n_neighbors=k)
+    scores = cross_val_score(knn, X_train, y_train, cv=5, scoring='accuracy')
+    cv_scores.append(scores.mean())
 
-# melakukan looping sebanyak nilai k
-for k in k_range:
-    # menjalankan KNeighborsClassifier
-    knn = KNeighborsClassifier(n_neighbors=k, metric='euclidean')
-    # mendapatkan cross_val_score untuk KNeighborsClassifier
-    scores = cross_val_score(knn, x, y, cv = 5, scoring= 'accuracy')
-    # menambahkan skor rata rata pada list k_scores
-    k_scores.append(scores.mean())
+output1 = pd.DataFrame({
+    'idData' : np.arange(1, len(y_test) + 1),
+    'label aktual' : y_test,
+    'prediksi' : y_pred,
+    'label luaran' : np.NaN
+    })
+output1.at[0,'label luaran'] = cv_scores[0]
 
-print(k_scores)
+output2 = pd.DataFrame({
+    'idData' : np.arange(1, len(y_test) + 1),
+    'label aktual' : y_test,
+    'prediksi' : y_pred,
+    'label luaran' : np.NaN
+    })
+output2.at[0,'label luaran'] = cv_scores[1]
 
-# panjang list
-print('Length og list', len(k_scores))
-print('Max of list', max(k_scores))
+output3 = pd.DataFrame({
+    'idData' : np.arange(1, len(y_test) + 1),
+    'label aktual' : y_test,
+    'prediksi' : y_pred,
+    'label luaran' : np.NaN
+    })
+output3.at[0,'label luaran'] = cv_scores[2]
 
-# Lakukan Visualisasi
-import matplotlib.pyplot as plt
-#matplotlib inline
+output4 = pd.DataFrame({
+    'idData' : np.arange(1, len(y_test) + 1),
+    'label aktual' : y_test,
+    'prediksi' : y_pred,
+    'label luaran' : np.NaN
+    })
+output4.at[0,'label luaran'] = cv_scores[3]
 
-plt.plot(k_range, k_scores)
-plt.xlabel('Nilai K untuk KNN')
-plt.ylabel('Hasil')
-plt.title('Prediksi dengan KNN')
+output5 = pd.DataFrame({
+    'idData' : np.arange(1, len(y_test) + 1),
+    'label aktual' : y_test,
+    'prediksi' : y_pred,
+    'label luaran' : np.NaN
+    })
+output5.at[0,'label luaran'] = cv_scores[4]
 
-'''
-print(x_train.shape) #bentuk data dari x_train
-print(x_test.shape) #bentuk data dari x_test 
-print(y_pred) #hasil prediksi
-print(y_test) #jawaban sebenarnya
-'''
-
-'''
-import numpy as np
-import pandas as pd
-from collections import Counter
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
-
-#membuat class KNN
-class KNN:
-    def __init__(self, k=3):
-        self.K=k
-    
-    def train(self, X, y):
-        self.X_train = X
-        self.y_train = y
-
-    def predict(self, X):
-        y_prediksi = [self._prediksi(x) for x in X]
-        return np.array(y_prediksi)
-
-    def _prediksi(self, x):
-        #hitung jarak kesemua data training
-        jarak_titik = [self.jarak(x,x_train) for x_train in self.X_train]
-        #urutkan berdasarkan jarak terdekat, ambil sejumlah K
-        k_terbaik = np.argsort(jarak_titik)[:self.K]
-        #ambil label k_terbaik
-        label_k_terbaik = [self.y_train[i] for i in k_terbaik]
-        #voting berdasarkan terbanyak
-        hasil_voting = Counter(label_k_terbaik).most_common(1)
-        return hasil_voting[0][0]
-
-    def jarak(self, x1, x2):
-        return np.sqrt(np.sum((x1-x2)**2))
-
-#import data iris
-iris = pd.read_excel('dataset.xlsx')
-print(iris)
-X,y = iris.data, iris.target
-
-X_Train, X_Test, y_train, y_test = train_test_split(X,y, test_size=0.2)
-
-#print(X_Train)
-#print(y_train)
-model = KNN(k=3)
-model.train(X_Train, y_train)
-hasil = model.predict(X_Test)
-print(hasil)
-
-akurasi = np.sum(hasil == y_test)/len(X_Test)
-
-print("akurasi: ", akurasi)
-'''
+with pd.ExcelWriter("OutputValidasi.xlsx") as writer:
+    # use to_excel function and specify the sheet_name and index
+    # to store the dataframe in specified sheet
+    output1.to_excel(writer, sheet_name="K=1", index=False)
+    output2.to_excel(writer, sheet_name="K=2", index=False)
+    output3.to_excel(writer, sheet_name="K=3", index=False)
+    output4.to_excel(writer, sheet_name="K=4", index=False)
+    output5.to_excel(writer, sheet_name="K=5", index=False)

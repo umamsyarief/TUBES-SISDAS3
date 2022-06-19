@@ -17,40 +17,24 @@ y = y.flatten()
 #Melakukan pembagian data latih dan data uji 80%/20%
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=3)
-print(len(X_train))
-print(len(X_test))
-print(len(y_train))
-print(len(y_test))
-
-#Training KNN Classification Model
-from sklearn.neighbors import KNeighborsClassifier
-#Nilai K pada KNN
-K = 3
-model = KNeighborsClassifier(n_neighbors=K)
-model.fit(X_train, y_train)
-
-#Menentukan Prediksi dari X_test
-y_pred = model.predict(X_test)
-
-# Menentukan probabilitas hasil prediksi
-model.predict_proba(X_test)
-
-#Menampilkan hasil akurasi
-from sklearn.metrics import accuracy_score
-accuracy= accuracy_score(y_test, y_pred)*100
-
-print('Accuracy of our model is equal ' + str(round(accuracy, 2)) + ' %.')
-
-from sklearn.model_selection import cross_val_score
 
 #membuat list of K for KNN
 k_list = list(range(1,50,2))
 
 cv_scores = []
 
-# melakukan 5-fold cross validation dengan k = 1 dalam knn
+#Training KNN Classification Model
+from sklearn.neighbors import KNeighborsClassifier
+
+# melakukan 5-fold cross validation dengan k_list dalam knn
+from sklearn.model_selection import cross_val_score
 for k in k_list:
     knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train, y_train)
+    #Menentukan Prediksi dari X_test
+    y_pred = knn.predict(X_test)
+    # Menentukan probabilitas hasil prediksi
+    knn.predict_proba(X_test)
     scores = cross_val_score(knn, X_train, y_train, cv=5, scoring='accuracy')
     cv_scores.append(scores.mean())
 
@@ -95,8 +79,6 @@ output5 = pd.DataFrame({
 output5.at[0,'label luaran'] = cv_scores[4]
 
 with pd.ExcelWriter("OutputValidasi.xlsx") as writer:
-    # use to_excel function and specify the sheet_name and index
-    # to store the dataframe in specified sheet
     output1.to_excel(writer, sheet_name="K=1", index=False)
     output2.to_excel(writer, sheet_name="K=2", index=False)
     output3.to_excel(writer, sheet_name="K=3", index=False)

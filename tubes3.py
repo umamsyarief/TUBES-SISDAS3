@@ -42,7 +42,7 @@ def hitung_knn(masukan):
     #Melakukan pembagian data latih dan data uji 80%/20%
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=3)
 
-    #membuat list of K for KNN
+    #membuat list K untuk KNN
     k_list = list(range(1,6,1))
 
     #membuat list kosong untuk cv_scores

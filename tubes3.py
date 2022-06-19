@@ -33,8 +33,6 @@ Masukkan nomor metric pilihan anda :''')
         masukan = 'euclidean'
     elif masukan == 2:
         masukan = 'manhattan'
-    elif masukan == 3:
-        masukan = 'minkowski'
     return masukan
 
 #perhitungan knn

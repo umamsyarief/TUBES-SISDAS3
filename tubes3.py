@@ -23,7 +23,6 @@ def opsi_metric():
 Masukan metric perhitungan
 1. Euclidean
 2. Manhattan
-3. Minkowski
 
 Masukkan nomor metric pilihan anda :''')
 
